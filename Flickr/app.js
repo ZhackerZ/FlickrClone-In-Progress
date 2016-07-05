@@ -2,8 +2,10 @@ var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
-var cookieParser = require('cookie-parser');
+//var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var session = require('express-session');
+var FileStore = require('session-file-store')(session);
 
 var mongoose = require('mongoose');
 
@@ -28,12 +30,20 @@ app.set('view engine', 'jade');
 app.set('views', path.join(__dirname, 'views'));
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
+app.use(session({
+  name: 'session-id',
+  secret: '12345-67890-09876-54321',
+  saveUninitialized: true,
+  resave: true,
+  store: new FileStore()
+}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser());
+//app.use(cookieParser());
 
 function auth (req, res, next) {
     console.log(req.headers);
+    if (!req.session.user) {
     var authHeader = req.headers.authorization;
     if (!authHeader) {
         var err = new Error('You are not authenticated!');
@@ -46,11 +56,24 @@ function auth (req, res, next) {
     var user = auth[0];
     var pass = auth[1];
     if (user == 'admin' && pass == 'password') {
+        req.session.user = 'admin';
         next(); // authorized
     } else {
         var err = new Error('You are not authenticated!');
         err.status = 401;
         next(err);
+    }
+  }
+  else{
+    if (req.session.user === 'admin') {
+            console.log('req.session: ',req.session);
+            next();
+        }
+        else {
+            var err = new Error('You are not authenticated!');
+            err.status = 401;
+            next(err);
+        }
     }
 }
 
