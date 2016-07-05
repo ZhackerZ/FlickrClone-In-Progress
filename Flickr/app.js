@@ -2,15 +2,20 @@ var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
-//var cookieParser = require('cookie-parser');
+var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-var session = require('express-session');
-var FileStore = require('session-file-store')(session);
+var passport = require('passport');
+var LocalStrategy = require('passport-local').Strategy;
+
+var config = require('./config');
+
+//var session = require('express-session');
+//var FileStore = require('session-file-store')(session);
 
 var mongoose = require('mongoose');
 
-var url = 'mongodb://localhost:27017/Flickr';
-mongoose.connect(url);
+//var url = 'mongodb://localhost:27017/Flickr';
+mongoose.connect(config.mongoUrl);
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function () {
@@ -29,6 +34,8 @@ app.set('view engine', 'jade');
 // uncomment after placing your favicon in /public
 app.set('views', path.join(__dirname, 'views'));
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+
+/*
 app.use(logger('dev'));
 app.use(session({
   name: 'session-id',
@@ -39,8 +46,11 @@ app.use(session({
 }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-//app.use(cookieParser());
+app.use(cookieParser());
 
+*/
+
+/*
 function auth (req, res, next) {
     console.log(req.headers);
     if (!req.session.user) {
@@ -78,6 +88,15 @@ function auth (req, res, next) {
 }
 
 app.use(auth);
+
+*/
+
+// passport config
+var User = require('./models/users');
+app.use(passport.initialize());
+passport.use(new LocalStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(function(err,req,res,next) {
@@ -105,7 +124,7 @@ app.use(function(req, res, next) {
 if (app.get('env') === 'development') {
   app.use(function(err, req, res, next) {
     res.status(err.status || 500);
-    res.render('error', {
+    res.json({
       message: err.message,
       error: err
     });
@@ -116,7 +135,7 @@ if (app.get('env') === 'development') {
 // no stacktraces leaked to user
 app.use(function(err, req, res, next) {
   res.status(err.status || 500);
-  res.render('error', {
+  res.json({
     message: err.message,
     error: {}
   });

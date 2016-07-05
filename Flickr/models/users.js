@@ -1,6 +1,7 @@
 // grab the things we need
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+var passportLocalMongoose = require('passport-local-mongoose');
 
 // create a schema
 var userSchema = new Schema({
@@ -12,7 +13,7 @@ var userSchema = new Schema({
         type: String,
         required: true
     },
-    email: {
+    username: {
         type: String,
         required: true,
         unique: true
@@ -20,16 +21,21 @@ var userSchema = new Schema({
     password: {
         type: String,
         required: true
-
     },
     phone: {
         type: Number,
         required: true,
         unique: true
+    },
+    admin: {
+        type: Boolean,
+        default: false
     }
 }, {
     timestamps: true
 });
+
+userSchema.plugin(passportLocalMongoose);
 
 // the schema is useless so far
 // we need to create a model using it
