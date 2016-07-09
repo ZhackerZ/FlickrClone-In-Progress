@@ -93,19 +93,22 @@ app.use(auth);
 
 // passport config
 var User = require('./models/users');
+
 app.use(passport.initialize());
 passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
+
+
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(function(err,req,res,next) {
-            res.writeHead(err.status || 500, {
-            'WWW-Authenticate': 'Basic',
-            'Content-Type': 'text/plain'
-        });
-        res.end(err.message);
-});
+// app.use(function(err,req,res,next) {
+//             res.writeHead(err.status || 500, {
+//             'WWW-Authenticate': 'Basic',
+//             'Content-Type': 'text/plain'
+//         });
+//         res.end(err.message);
+// });
 
 app.use('/', routes);
 app.use('/users', users);
